@@ -2,6 +2,11 @@ type Query {
   hello: String
 }
 
+type Mutation {
+  createWorkspace(name: String!): Boolean
+}
+
 schema {
   query: Query
+  mutation: Mutation
 }

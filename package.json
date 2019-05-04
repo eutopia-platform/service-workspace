@@ -7,7 +7,7 @@
     "now-build": "npm run build",
     "build:watch": "npm-watch build",
     "start": "NODE_ENV=production micro ./dist/index.js",
-    "start:dev": "NODE_ENV=development micro-dev ./dist/index.js --port 11000"
+    "start:dev": "source secret_setup.sh && NODE_ENV=development micro-dev ./dist/index.js --port 11000"
   },
   "author": "",
   "license": "ISC",
