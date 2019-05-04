@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "alias": ["work.api.productcube.io"],
+  "name": "service_workspace",
+  "builds": [{ "src": "index.js", "use": "@now/node" }],
+  "scope": "eutopia",
+  "env": {
+    "AUTH_PASSWORD": "@auth_password",
+    "DATABASE_URL": "@database_url",
+    "DATABASE_NAME": "@database_name",
+    "WORKSPACE_DATABASE_PASSWORD": "@database_password"
+  }
+}

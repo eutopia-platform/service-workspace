@@ -1,0 +1,38 @@
+{
+  "name": "service-workspace",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "node ./build/buildSchema.js & babel src -d dist",
+    "now-build": "npm run build",
+    "build:watch": "npm-watch build",
+    "start": "NODE_ENV=production micro ./dist/index.js",
+    "start:dev": "NODE_ENV=development micro-dev ./dist/index.js --port 11000"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.4.3",
+    "@babel/core": "^7.4.3",
+    "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@babel/plugin-proposal-pipeline-operator": "^7.3.2",
+    "@babel/plugin-transform-runtime": "^7.4.3",
+    "@babel/preset-env": "^7.4.3",
+    "fs-extra": "^7.0.1",
+    "micro-dev": "^3.0.0",
+    "npm-watch": "^0.6.0"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.4.3",
+    "apollo-client": "^2.5.1",
+    "apollo-error": "^1.0.2",
+    "apollo-link": "^1.2.11",
+    "apollo-link-error": "^1.1.10",
+    "apollo-link-http": "^1.5.14",
+    "graphql": "^14.2.1",
+    "knex": "^0.16.5",
+    "micro": "^9.3.3",
+    "node-fetch": "^2.3.0",
+    "pg": "^7.10.0"
+  }
+}
