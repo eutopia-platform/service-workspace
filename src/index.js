@@ -4,7 +4,6 @@ import schema from './schema'
 import rootResolvers from './rootResolvers'
 import { json } from 'micro'
 import headers from './headers'
-import connections from './connections'
 
 const getArguments = async request => {
   switch (request.method) {
