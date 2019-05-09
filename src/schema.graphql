@@ -1,9 +1,15 @@
+type Workspace {
+  name: String!
+  id: ID!
+}
+
 type Query {
   hello: String
+  workspace(name: String!): Workspace
 }
 
 type Mutation {
-  createWorkspace(name: String!): Boolean
+  createWorkspace(name: String!): Workspace
 }
 
 schema {

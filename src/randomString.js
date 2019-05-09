@@ -4,7 +4,7 @@ const ascii = {
   numbers: () => '0123456789'.split(''),
 }
 
-export default (length, select) => {
+export default (length, select = { lower: true, upper: true, number: true }) => {
   const pool = [
     ...(select.lower ? ascii.lowerCase() : []),
     ...(select.upper ? ascii.upperCase() : []),
