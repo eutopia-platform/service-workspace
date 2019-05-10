@@ -54,6 +54,25 @@ export default {
     return await knex('workspace').whereIn('uid', memberSpaces)
   },
 
+  workspace: async ({name}, context) => {
+    const user = await getUser(context)
+    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
+
+    let workspace = await selectSingle('workspace', {name})
+    if (!workspace)
+      workspace = (await knex('workspace').select('name', 'uid')).find(
+        e => e.name.toLowerCase() === name.toLowerCase()
+      )
+    if (!workspace) return
+    
+    const isMember = (await knex(workspace.uid + '_member')).some(e => e.uid === user.uid)
+    if (!isMember) return
+
+    return {
+      name: workspace.name,
+    }
+  },
+
   createWorkspace: async ({name}, context) => {
     if (/[^a-zA-Z0-9]/.test(name))
       throw Error('INVALID_NAME')
@@ -81,7 +100,6 @@ export default {
 
     return {
       name,
-      id: uid,
     }
   },
 }

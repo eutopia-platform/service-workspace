@@ -1,10 +1,10 @@
 type Workspace {
   name: String!
-  id: ID!
 }
 
 type Query {
   hello: String
+  workspace(name: String!): Workspace
   workspaces: [Workspace!]!
 }
 
