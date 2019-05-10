@@ -39,6 +39,21 @@ const getUser = async ({ headers: { 'session-token': token } }) =>
 export default {
   hello: () => 'hello there!',
 
+  workspaces: async (_, context) => {
+    const user = await getUser(context)
+    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
+
+    const spaceIds = await knex('workspace').select('uid').map(s => s.uid)
+    const memberSpaces = (await Promise.all(
+      spaceIds.map(async id => await knex(id + '_member').map(m => m.uid))
+    ))
+      .map(m => m.includes(user.uid))
+      .map((v, i) => [spaceIds[i], v])
+      .reduce((acc, c) => (c[1] ? acc.concat(c[0]) : acc), [])
+      
+    return await knex('workspace').whereIn('uid', memberSpaces)
+  },
+
   createWorkspace: async ({name}, context) => {
     if (/[^a-zA-Z0-9]/.test(name))
       throw Error('INVALID_NAME')

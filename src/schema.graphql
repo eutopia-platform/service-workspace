@@ -5,7 +5,7 @@ type Workspace {
 
 type Query {
   hello: String
-  workspace(name: String!): Workspace
+  workspaces: [Workspace!]!
 }
 
 type Mutation {
