@@ -18,31 +18,32 @@ const dbSchema = 'sc_work'
 const select = async (from, where) => await knex.select().withSchema(dbSchema).from(from).where(where)
 const selectSingle = async (from, where) => await select(from, where) |> (_ => #.length ?#[0] : null) ()
 
-export default {
-  hello: () => 'hello there!',
-
-  workspace: async({}) => {
-    return {
-      name: 'foo'
-    }
-  },
-
-  createWorkspace: async({name}, context) => {
-    if (/[^a-zA-Z0-9]/.test(name))
-      throw Error('INVALID_NAME')
-    
-    const token = context.headers['session-token']
-    const user = !token ? { isLoggedIn: false } : (await auth.query({
-      query: gql`query authUser($token: ID!) {
-        user(token: $token) {
-          isLoggedIn
-          uid
-        }
-      }`,
+const getUser = async ({ headers: { 'session-token': token } }) => 
+  !token
+    ? { isLoggedIn: false }
+    : (await auth.query({
+      query: gql`
+          query authUser($token: ID!) {
+            user(token: $token) {
+              isLoggedIn
+              uid
+            }
+          }
+        `,
       variables: {
         token
       }
     })).data.user
+
+
+export default {
+  hello: () => 'hello there!',
+
+  createWorkspace: async ({name}, context) => {
+    if (/[^a-zA-Z0-9]/.test(name))
+      throw Error('INVALID_NAME')
+    
+    const user = await getUser(context)
 
     if (!user.isLoggedIn)
       throw Error('NOT_LOGGED_IN')
@@ -65,5 +66,5 @@ export default {
       name,
       id: uid,
     }
-  }
+  },
 }
