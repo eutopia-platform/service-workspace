@@ -38,10 +38,6 @@ const main = async (request, response) => {
   try {
     const args = await getArguments(request)
 
-    const context = {
-      connections: connections,
-      headers: request.headers
-    }
     const query = args.query
     const variables = args.variables
     const operationName = args.operationName
@@ -50,7 +46,7 @@ const main = async (request, response) => {
         schema,
         query,
         rootResolvers,
-        context,
+        request,
         variables,
         operationName
       ))
