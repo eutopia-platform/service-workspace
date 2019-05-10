@@ -50,7 +50,7 @@ export default {
       .map(m => m.includes(user.uid))
       .map((v, i) => [spaceIds[i], v])
       .reduce((acc, c) => (c[1] ? acc.concat(c[0]) : acc), [])
-      
+
     return await knex('workspace').whereIn('uid', memberSpaces)
   },
 
@@ -63,7 +63,9 @@ export default {
     if (!user.isLoggedIn)
       throw Error('NOT_LOGGED_IN')
 
-    const exists = await selectSingle('workspace', {name}) ? true : false
+    const exists = (await knex('workspace').select('name'))
+      .map(s => s.name.toLowerCase())
+      .includes(name.toLowerCase())
     if (exists)
       throw Error('ALREADY_EXISTS')
 
