@@ -2,7 +2,7 @@ CREATE SCHEMA IF NOT EXISTS sc_work;
 
 DROP TABLE IF EXISTS sc_work.workspace;
 CREATE TABLE sc_work.workspace(
-  uid       char(20)      PRIMARY KEY,
+  uid       text          PRIMARY KEY,
   name      varchar(70)   UNIQUE NOT NULL
 );
 
