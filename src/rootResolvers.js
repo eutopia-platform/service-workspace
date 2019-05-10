@@ -12,11 +12,12 @@ const knex = require('knex')({
     database: process.env.DATABASE_NAME,
     user: 'service_work',
     password: process.env.WORKSPACE_DATABASE_PASSWORD
-  }
+  },
+  searchPath: 'sc_work'
 })
-const dbSchema = 'sc_work'
-const select = async (from, where) => await knex.select().withSchema(dbSchema).from(from).where(where)
-const selectSingle = async (from, where) => await select(from, where) |> (_ => #.length ?#[0] : null) ()
+
+const select = async (from, where = {}) => await knex.from(from).where(where)
+const selectSingle = async (from, where = {}) => await select(from, where) |> (_ => #.length ?#[0] : null) ()
 
 const getUser = async ({ headers: { 'session-token': token } }) => 
   !token
@@ -34,7 +35,6 @@ const getUser = async ({ headers: { 'session-token': token } }) =>
         token
       }
     })).data.user
-
 
 export default {
   hello: () => 'hello there!',
@@ -56,11 +56,11 @@ export default {
     while (await selectSingle('workspace', {uid}))
       uid = randomString(8, { lower: true })
 
-    await knex.withSchema(dbSchema).into('workspace').insert({uid, name})
-    await knex.schema.withSchema(dbSchema).createTable(`${uid}_member`, table => {
+    await knex.into('workspace').insert({uid, name})
+    await knex.schema.createTable(`${uid}_member`, table => {
       table.string('uid', 20)
     })
-    await knex.withSchema(dbSchema).into(`${uid}_member`).insert({uid: user.uid})
+    await knex.into(`${uid}_member`).insert({uid: user.uid})
 
     return {
       name,
