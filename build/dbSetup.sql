@@ -3,7 +3,8 @@ CREATE SCHEMA IF NOT EXISTS sc_work;
 DROP TABLE IF EXISTS sc_work.workspace;
 CREATE TABLE sc_work.workspace(
   uid       text          PRIMARY KEY,
-  name      varchar(70)   UNIQUE NOT NULL
+  name      varchar(70)   UNIQUE NOT NULL,
+  created   timestamptz
 );
 
 DROP USER IF EXISTS service_work;

@@ -1,5 +1,6 @@
 type Workspace {
   name: String!
+  created: String
 }
 
 type Query {

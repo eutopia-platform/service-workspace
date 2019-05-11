@@ -1,5 +1,3 @@
-import { graphql } from 'graphql'
-import schema from './schema'
 import { auth } from './interService'
 import gql from 'graphql-tag'
 import randomString from './randomString'
@@ -36,6 +34,11 @@ const getUser = async ({ headers: { 'session-token': token } }) =>
       }
     })).data.user
 
+const spaceDbToGraph = space => ({
+  name: space.name,
+  created: space.created ? space.created.toISOString() : null,
+})
+
 export default {
   hello: () => 'hello there!',
 
@@ -51,7 +54,7 @@ export default {
       .map((v, i) => [spaceIds[i], v])
       .reduce((acc, c) => (c[1] ? acc.concat(c[0]) : acc), [])
 
-    return await knex('workspace').whereIn('uid', memberSpaces)
+    return await knex('workspace').whereIn('uid', memberSpaces).map(space => spaceDbToGraph(space))
   },
 
   workspace: async ({name}, context) => {
@@ -60,7 +63,7 @@ export default {
 
     let workspace = await selectSingle('workspace', {name})
     if (!workspace)
-      workspace = (await knex('workspace').select('name', 'uid')).find(
+      workspace = (await knex('workspace').select()).find(
         e => e.name.toLowerCase() === name.toLowerCase()
       )
     if (!workspace) return
@@ -68,9 +71,7 @@ export default {
     const isMember = (await knex(workspace.uid + '_member')).some(e => e.uid === user.uid)
     if (!isMember) return
 
-    return {
-      name: workspace.name,
-    }
+    return spaceDbToGraph(workspace)
   },
 
   createWorkspace: async ({name}, context) => {
@@ -92,7 +93,7 @@ export default {
     while (await selectSingle('workspace', {uid}))
       uid = randomString(8, { lower: true })
 
-    await knex.into('workspace').insert({uid, name})
+    await knex.into('workspace').insert({ uid, name, created: new Date().toISOString() })
     await knex.schema.createTable(`${uid}_member`, table => {
       table.string('uid', 20)
     })
