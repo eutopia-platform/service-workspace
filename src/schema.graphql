@@ -1,6 +1,12 @@
 type Workspace {
   name: String!
   created: String
+  members: [User!]!
+}
+
+type User {
+  name: String!
+  id: ID!
 }
 
 type Query {
