@@ -46,6 +46,8 @@ const getMembers = async uids => {
       query members($uids: [ID!]!) {
         users(uids: $uids) {
           name
+          callname
+          email
           id
         }
       }

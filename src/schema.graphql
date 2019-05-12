@@ -5,8 +5,10 @@ type Workspace {
 }
 
 type User {
-  name: String!
   id: ID!
+  name: String!
+  callname: String!
+  email: String!
 }
 
 type Query {
