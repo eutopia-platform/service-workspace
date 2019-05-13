@@ -141,6 +141,27 @@ export default {
     }
   },
 
+  joinWorkspace: async({ inviteLink }, context) => {
+    const user = await getUser(context)
+    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
+
+    const invite = await selectSingle('invitation', { link: inviteLink })
+    if (!invite) throw Error('UNAUTHORIZED')
+
+    if (user.uid !== invite.invitee) throw Error('UNAUTHORIZED')
+
+    const space = await selectSingle('workspace', { uid: invite.workspace })
+    if (!space) throw Error('WORKSPACE_GONE')
+
+    await knex(`${space.uid}_member`).insert({uid: invite.invitee})
+    await knex('invitation').where({invitee: invite.invitee}).del()
+
+    return {
+      name: space.name,
+      members: []
+    }
+  },
+
   invite: async ({workspace, email}, context) => {
     const space = await selectSingle('workspace', {name: workspace})
     if (!space) throw Error('UNAUTHORIZED')
