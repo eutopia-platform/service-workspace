@@ -15,6 +15,7 @@ type Query {
   hello: String
   workspace(name: String!): Workspace
   workspaces: [Workspace!]!
+  inviteSpaceName(link: String!): String!
 }
 
 type Mutation {

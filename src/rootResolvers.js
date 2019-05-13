@@ -96,6 +96,21 @@ export default {
     return spaceDbToGraph(workspace, members)
   },
 
+  inviteSpaceName: async ({link}, context) => {
+    const user = await getUser(context)
+    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
+
+    const invite = await selectSingle('invitation', { link })
+    if (!invite) throw Error('UNAUTHORIZED')
+
+    if (user.uid !== invite.invitee) throw Error('UNAUTHORIZED')
+
+    const space = await selectSingle('workspace', { uid: invite.workspace })
+    if (!space) throw Error('WORKSPACE_GONE')
+
+    return space.name
+  },
+
   createWorkspace: async ({name}, context) => {
     if (/[^a-zA-Z0-9]/.test(name))
       throw Error('INVALID_NAME')
