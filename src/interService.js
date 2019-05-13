@@ -24,7 +24,15 @@ function service(url, headers) {
         headers
       })
     ]),
-    cache: new InMemoryCache()
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      query: {
+        fetchPolicy: 'network-only'
+      },
+      mutation: {
+        fetchPolicy: 'network-only'
+      }
+    }
   })
 }
 
