@@ -1,6 +1,7 @@
-import { auth, user } from './interService'
+import { auth, user as userService } from './interService'
 import gql from 'graphql-tag'
 import randomString from './randomString'
+import { isValidEmail, sendInvitation as sendInviteEmail } from './mail'
 
 const knex = require('knex')({
   client: 'pg',
@@ -41,7 +42,7 @@ const spaceDbToGraph = (space, members) => ({
 })
 
 const getMembers = async uids => {
-  return (await user.query({
+  return (await userService.query({
     query: gql`
       query members($uids: [ID!]!) {
         users(uids: $uids) {
@@ -124,4 +125,62 @@ export default {
       name,
     }
   },
+
+  invite: async ({workspace, email}, context) => {
+    const space = await selectSingle('workspace', {name: workspace})
+    if (!space) throw Error('UNAUTHORIZED')
+
+    const user = await getUser(context)
+    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
+
+    const memberUids = await knex(space.uid + '_member').map(m => m.uid)
+    const isMember = memberUids.includes(user.uid)
+    if (!isMember) throw Error('UNAUTHORIZED')
+
+    if (!isValidEmail(email))
+      throw Error('INVALID_EMAIL')
+
+    const invitee = (await userService.query({
+      query: gql`query getAccount($email: String!) {
+        getUser(email: $email)
+      }`,
+      variables: {
+        email
+      },
+    })).data.getUser
+
+    if (!invitee) throw Error('NOT_USER')
+
+    if (memberUids.includes(invitee)) throw Error('ALREADY_MEMBER')
+
+    const alreadInvited = (await knex('invitation').select().where({invitee})).length > 0
+    if (alreadInvited) throw Error('ALREADY_INVITED')
+
+    let link
+    do {
+      link = randomString(6, {lower: true, number: true})
+    } while ((await knex('invitation').where({link})).length > 0)
+
+    await knex('invitation').insert({
+      link: link,
+      workspace: space.uid,
+      invitee: invitee,
+      issuer: user.uid,
+      created: new Date().toISOString(),
+    })
+
+    const [ inviteeName, userName ] = (await userService.query({
+      query: gql`query inviteeName($uidInvitee: ID!, $uidUser: ID!) {
+        users(uids: [$uidInvitee, $uidUser]) {
+          callname
+        }
+      }`,
+      variables: {
+        uidInvitee: invitee,
+        uidUser: user.uid
+      }
+    })).data.users.map(user => user.callname)
+
+    await sendInviteEmail(email, space.name, userName, inviteeName, `https://productcube.io/invite/${link}`)
+  }
 }

@@ -49,3 +49,10 @@ export const user = service(
     : 'https://user.api.productcube.io',
   { auth: process.env.USER_PASSWORD }
 )
+
+export const mail = service(
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:9000'
+    : 'https://mail.api.productcube.io',
+  { auth: process.env.MAIL_PASSWORD }
+)

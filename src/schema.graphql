@@ -19,6 +19,7 @@ type Query {
 
 type Mutation {
   createWorkspace(name: String!): Workspace
+  invite(workspace: String!, email: String!): Boolean
 }
 
 schema {

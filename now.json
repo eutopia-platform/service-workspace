@@ -7,6 +7,7 @@
   "env": {
     "AUTH_PASSWORD": "@auth_password",
     "USER_PASSWORD": "@user_password",
+    "MAIL_PASSWORD": "@mail_password",
     "DATABASE_URL": "@database_url",
     "DATABASE_NAME": "@database_name",
     "WORKSPACE_DATABASE_PASSWORD": "@database_password"
