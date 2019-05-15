@@ -18,14 +18,12 @@ const knex = require('knex')({
 const select = async (from, where = {}) => await knex.from(from).where(where)
 const selectSingle = async (from, where = {}) => await select(from, where) |> (_ => #.length ?#[0] : null) ()
 
-const getUser = async ({ headers: { 'session-token': token } }) => 
-  !token
-    ? { isLoggedIn: false }
-    : (await auth.query({
+const getUser = async ({ headers: { 'session-token': token } }) => {
+  if (!token) throw Error('NOT_LOGGED_IN')
+  return (await auth.query({
       query: gql`
           query authUser($token: ID!) {
             user(token: $token) {
-              isLoggedIn
               uid
             }
           }
@@ -34,6 +32,7 @@ const getUser = async ({ headers: { 'session-token': token } }) =>
         token
       }
     })).data.user
+}
 
 const spaceDbToGraph = (space, members) => ({
   name: space.name,
@@ -45,7 +44,7 @@ const getMembers = async uids => {
   return (await userService.query({
     query: gql`
       query members($uids: [ID!]!) {
-        users(uids: $uids) {
+        usersById(ids: $uids) {
           name
           callname
           email
@@ -64,7 +63,6 @@ export default {
 
   workspaces: async (_, context) => {
     const user = await getUser(context)
-    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
 
     const spaceIds = await knex('workspace').select('uid').map(s => s.uid)
     const memberSpaces = (await Promise.all(
@@ -79,7 +77,6 @@ export default {
 
   workspace: async ({name}, context) => {
     const user = await getUser(context)
-    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
 
     let workspace = await selectSingle('workspace', {name})
     if (!workspace)
@@ -98,7 +95,6 @@ export default {
 
   inviteSpaceName: async ({link}, context) => {
     const user = await getUser(context)
-    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
 
     const invite = await selectSingle('invitation', { link })
     if (!invite) throw Error('UNAUTHORIZED')
@@ -116,9 +112,6 @@ export default {
       throw Error('INVALID_NAME')
     
     const user = await getUser(context)
-
-    if (!user.isLoggedIn)
-      throw Error('NOT_LOGGED_IN')
 
     const exists = (await knex('workspace').select('name'))
       .map(s => s.name.toLowerCase())
@@ -143,7 +136,6 @@ export default {
 
   joinWorkspace: async({ inviteLink }, context) => {
     const user = await getUser(context)
-    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
 
     const invite = await selectSingle('invitation', { link: inviteLink })
     if (!invite) throw Error('UNAUTHORIZED')
@@ -167,7 +159,6 @@ export default {
     if (!space) throw Error('UNAUTHORIZED')
 
     const user = await getUser(context)
-    if (!user.isLoggedIn) throw Error('NOT_LOGGED_IN')
 
     const memberUids = await knex(space.uid + '_member').map(m => m.uid)
     const isMember = memberUids.includes(user.uid)
@@ -207,7 +198,7 @@ export default {
 
     const [ inviteeName, userName ] = (await userService.query({
       query: gql`query inviteeName($uidInvitee: ID!, $uidUser: ID!) {
-        users(uids: [$uidInvitee, $uidUser]) {
+        usersById(ids: [$uidInvitee, $uidUser]) {
           callname
         }
       }`,
