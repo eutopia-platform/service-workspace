@@ -164,6 +164,25 @@ export default {
         inviteeName,
         `https://productcube.io/invite/${link}`
       )
+    },
+
+    joinWorkspace: async (root, { inviteLink }, context) => {
+      if (!context.userId) throw new AuthenticationError('NOT_LOGGED_IN')
+      const invite = (await knex('invitation').where({ link: inviteLink }))[0]
+      if (!invite) throw new ForbiddenError()
+      if (invite.invitee !== context.userId) throw new ForbiddenError()
+
+      const space = (await knex('workspace').where({
+        uid: invite.workspace
+      }))[0]
+      if (!space) throw new ApolloError('WORKSPACE_GONE')
+
+      await knex(`${space.uid}_member`).insert({ uid: invite.invitee })
+      await knex('invitation')
+        .where({ invitee: invite.invitee })
+        .del()
+
+      return (await knex('workspace').where({ uid: space.uid }))[0]
     }
   },
 

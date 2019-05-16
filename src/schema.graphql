@@ -21,7 +21,7 @@ type Query {
 
 type Mutation {
   createWorkspace(name: String!): Workspace!
-  # joinWorkspace(inviteLink: String!): Workspace
+  joinWorkspace(inviteLink: String!): Workspace!
   invite(workspace: String!, email: String!): Boolean
 }
 
