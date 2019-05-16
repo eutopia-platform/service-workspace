@@ -183,6 +183,24 @@ export default {
         .del()
 
       return (await knex('workspace').where({ uid: space.uid }))[0]
+    },
+
+    deleteWorkspace: async (root, { name }, context) => {
+      if (!context.userId) throw new ForbiddenError()
+      const space = (await knex('workspace').where({ name }))[0]
+      if (!space) throw new ForbiddenError()
+      const isMember =
+        (await knex(`${space.uid}_member`).where({ uid: context.userId }))
+          .length > 0
+      if (!isMember) throw new ForbiddenError()
+
+      await knex('invitation')
+        .where({ workspace: space.uid })
+        .del()
+      await knex.schema.dropTable(`${space.uid}_member`)
+      await knex('workspace')
+        .where({ uid: space.uid })
+        .del()
     }
   },
 
