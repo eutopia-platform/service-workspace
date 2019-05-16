@@ -7,6 +7,7 @@ import {
 } from 'apollo-server-micro'
 import crypto from 'crypto'
 import { user as userService } from './interService'
+import randomString from './randomString'
 
 const knex = require('knex')({
   client: 'pg',
@@ -40,7 +41,6 @@ export default {
 
     workspaces: async (root, args, context) => {
       if (!context.userId) throw new AuthenticationError('NOT_LOGGED_IN')
-      console.log('hello')
       const spaceIds = await knex('workspace')
         .select('uid')
         .map(s => s.uid)
@@ -61,6 +61,31 @@ export default {
       const space = await knex('workspace').where({ uid: invite.workspace })
       if (!space) throw new ApolloError('WORKSPACE_GONE')
       return space.name
+    }
+  },
+
+  Mutation: {
+    createWorkspace: async (root, { name }, context) => {
+      if (!context.userId) throw new AuthenticationError('NOT_LOGGED_IN')
+      if (/[^a-zA-Z0-9]/.test(name)) throw new UserInputError('INVALID_NAME')
+      const exists = (await knex('workspace').select('name'))
+        .map(s => s.name.toLowerCase())
+        .includes(name.toLowerCase())
+      if (exists) throw new UserInputError('ALREADY_EXISTS')
+
+      let uid = randomString(8, { lower: true })
+      while ((await knex('workspace').where({ uid }).length) > 0)
+        uid = randomString(8, { lower: true })
+
+      const space = (await knex
+        .into('workspace')
+        .insert({ uid, name, created: new Date().toISOString() })
+        .returning('*'))[0]
+      await knex.schema.createTable(`${uid}_member`, table => {
+        table.string('uid', 20)
+      })
+      await knex.into(`${uid}_member`).insert({ uid: context.userId })
+      return space
     }
   },
 
