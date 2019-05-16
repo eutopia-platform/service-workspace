@@ -1,7 +1,32 @@
+type User {
+  id: ID!
+  name: String!
+  callname: String!
+  email: String!
+}
+
+type Workspace {
+  name: String!
+  created: String
+  members: [User!]!
+  invited: [User!]!
+}
+
 type Query {
-  hello: String
+  hello: String!
+  workspace(name: String!): Workspace!
+  workspaces: [Workspace!]!
+  inviteSpaceName(link: String!): String!
+}
+
+type Mutation {
+  createWorkspace(name: String!): Workspace!
+  joinWorkspace(inviteLink: String!): Workspace!
+  invite(workspace: String!, email: String!): Boolean
+  deleteWorkspace(name: String!): Boolean
 }
 
 schema {
   query: Query
+  mutation: Mutation
 }
