@@ -1,19 +1,19 @@
-# type Workspace {
-#   name: String!
-#   created: String
-#   members: [User!]!
-# }
+type User {
+  id: ID!
+  name: String!
+  callname: String!
+  email: String!
+}
 
-# type User {
-#   id: ID!
-#   name: String!
-#   callname: String!
-#   email: String!
-# }
+type Workspace {
+  name: String!
+  members: [User!]!
+  created: String
+}
 
 type Query {
   hello: String!
-  # workspace(name: String!): Workspace
+  workspace(name: String!): Workspace!
   # workspaces: [Workspace!]!
   # inviteSpaceName(link: String!): String!
 }
