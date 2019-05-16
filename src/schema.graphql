@@ -1,9 +1,3 @@
-type Workspace {
-  name: String!
-  created: String
-  members: [User!]!
-}
-
 type User {
   id: ID!
   name: String!
@@ -11,16 +5,23 @@ type User {
   email: String!
 }
 
+type Workspace {
+  name: String!
+  created: String
+  members: [User!]!
+  invited: [User!]!
+}
+
 type Query {
-  hello: String
-  workspace(name: String!): Workspace
+  hello: String!
+  workspace(name: String!): Workspace!
   workspaces: [Workspace!]!
   inviteSpaceName(link: String!): String!
 }
 
 type Mutation {
-  createWorkspace(name: String!): Workspace
-  joinWorkspace(inviteLink: String!): Workspace
+  createWorkspace(name: String!): Workspace!
+  joinWorkspace(inviteLink: String!): Workspace!
   invite(workspace: String!, email: String!): Boolean
 }
 

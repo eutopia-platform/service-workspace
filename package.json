@@ -11,6 +11,33 @@
   },
   "author": "",
   "license": "ISC",
+  "watch": {
+    "build": {
+      "patterns": [
+        "src"
+      ],
+      "extensions": "js,graphql"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eutopia-platform/service-workspace.git"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.4.3",
+    "apollo-cache-inmemory": "^1.5.1",
+    "apollo-client": "^2.5.1",
+    "apollo-link": "^1.2.11",
+    "apollo-link-error": "^1.1.10",
+    "apollo-link-http": "^1.5.14",
+    "apollo-server-micro": "^2.5.0",
+    "graphql": "^14.2.0",
+    "graphql-tag": "^2.10.1",
+    "knex": "^0.16.5",
+    "micro": "^9.3.3",
+    "node-fetch": "^2.3.0",
+    "pg": "^7.10.0"
+  },
   "devDependencies": {
     "@babel/cli": "^7.4.3",
     "@babel/core": "^7.4.3",
@@ -21,20 +48,5 @@
     "fs-extra": "^7.0.1",
     "micro-dev": "^3.0.0",
     "npm-watch": "^0.6.0"
-  },
-  "dependencies": {
-    "@babel/runtime": "^7.4.3",
-    "apollo-cache-inmemory": "^1.5.1",
-    "apollo-client": "^2.5.1",
-    "apollo-error": "^1.0.2",
-    "apollo-link": "^1.2.11",
-    "apollo-link-error": "^1.1.10",
-    "apollo-link-http": "^1.5.14",
-    "graphql": "^14.2.1",
-    "graphql-tag": "^2.10.1",
-    "knex": "^0.16.5",
-    "micro": "^9.3.3",
-    "node-fetch": "^2.3.0",
-    "pg": "^7.10.0"
   }
 }
