@@ -13,11 +13,7 @@ async function writeSchema(content) {
 
 async function main() {
   const content =
-    `import {buildSchema} from 'graphql'
-    
-    export default buildSchema(\`` +
-    (await fs.readFile('./src/schema.graphql')) +
-    '`)'
+    `export default \`` + (await fs.readFile('./src/schema.graphql')) + '`'
 
   const transpiled = (await transformAsync(content)).code
 
