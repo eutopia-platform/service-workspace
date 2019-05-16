@@ -56,10 +56,12 @@ export default {
     },
 
     inviteSpaceName: async (root, { link }, context) => {
-      const invite = await knex('invitation').where({ link })[0]
+      const invite = (await knex('invitation').where({ link }))[0]
       if (!invite) throw new ForbiddenError()
       if (context.userId !== invite.invitee) throw new ForbiddenError()
-      const space = await knex('workspace').where({ uid: invite.workspace })
+      const space = (await knex('workspace').where({
+        uid: invite.workspace
+      }))[0]
       if (!space) throw new ApolloError('WORKSPACE_GONE')
       return space.name
     }
