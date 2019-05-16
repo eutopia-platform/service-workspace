@@ -1,4 +1,10 @@
-import { AuthenticationError, UserInputError, gql } from 'apollo-server-micro'
+import {
+  AuthenticationError,
+  ForbiddenError,
+  UserInputError,
+  ApolloError,
+  gql
+} from 'apollo-server-micro'
 import crypto from 'crypto'
 import { user as userService } from './interService'
 
@@ -46,6 +52,15 @@ export default {
         .reduce((acc, c) => (c[1] ? acc.concat(c[0]) : acc), [])
 
       return await knex('workspace').whereIn('uid', memberSpaces)
+    },
+
+    inviteSpaceName: async (root, { link }, context) => {
+      const invite = await knex('invitation').where({ link })[0]
+      if (!invite) throw new ForbiddenError()
+      if (context.userId !== invite.invitee) throw new ForbiddenError()
+      const space = await knex('workspace').where({ uid: invite.workspace })
+      if (!space) throw new ApolloError('WORKSPACE_GONE')
+      return space.name
     }
   },
 
