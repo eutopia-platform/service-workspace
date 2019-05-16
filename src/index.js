@@ -25,26 +25,29 @@ export default async (request, response) => {
   )
 
   const sessionToken = request.headers['session-token'] || null
-  const userId = !sessionToken
-    ? null
-    : (await authService.query({
-        query: gql`
-          query sessionUser($sessionToken: ID!) {
-            user(token: $sessionToken) {
-              uid
+  let userId = null
+  try {
+    userId = !sessionToken
+      ? null
+      : (await authService.query({
+          query: gql`
+            query sessionUser($sessionToken: ID!) {
+              user(token: $sessionToken) {
+                uid
+              }
             }
+          `,
+          variables: {
+            sessionToken
           }
-        `,
-        variables: {
-          sessionToken
-        }
-      })).data.user.uid
+        })).data.user.uid
+  } catch (err) {}
 
   new ApolloServer({
     typeDefs: schema,
     resolvers,
     context: {
-      userId,
+      userId
     }
   }).createHandler({
     path: '/'

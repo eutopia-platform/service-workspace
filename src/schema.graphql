@@ -14,7 +14,7 @@ type Workspace {
 type Query {
   hello: String!
   workspace(name: String!): Workspace!
-  # workspaces: [Workspace!]!
+  workspaces: [Workspace!]!
   # inviteSpaceName(link: String!): String!
 }
 

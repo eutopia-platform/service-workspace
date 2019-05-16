@@ -30,6 +30,22 @@ export default {
         throw new UserInputError(`workspace with name "${name}" doesn't exist`)
 
       return workspace
+    },
+
+    workspaces: async (root, args, context) => {
+      if (!context.userId) throw new AuthenticationError('NOT_LOGGED_IN')
+      console.log('hello')
+      const spaceIds = await knex('workspace')
+        .select('uid')
+        .map(s => s.uid)
+      const memberSpaces = (await Promise.all(
+        spaceIds.map(async id => await knex(id + '_member').map(m => m.uid))
+      ))
+        .map(m => m.includes(context.userId))
+        .map((v, i) => [spaceIds[i], v])
+        .reduce((acc, c) => (c[1] ? acc.concat(c[0]) : acc), [])
+
+      return await knex('workspace').whereIn('uid', memberSpaces)
     }
   },
 
