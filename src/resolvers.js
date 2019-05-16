@@ -91,8 +91,8 @@ export default {
 
   Workspace: {
     created: ({ created }) => (created ? created.toISOString() : null),
-    members: async ({ uid }) => {
-      return (await userService.query({
+    members: async ({ uid }) =>
+      (await userService.query({
         query: gql`
           query getUsers($ids: [ID!]!) {
             usersById(ids: $ids) {
@@ -106,8 +106,27 @@ export default {
         variables: {
           ids: await knex(`${uid}_member`).map(user => user.uid)
         }
+      })).data.usersById,
+
+    invited: async ({ uid }) =>
+      (await userService.query({
+        query: gql`
+          query getUsers($ids: [ID!]!) {
+            usersById(ids: $ids) {
+              id
+              name
+              callname
+              email
+            }
+          }
+        `,
+        variables: {
+          ids: await knex('invitation')
+            .select('invitee')
+            .where({ workspace: uid })
+            .map(e => e.invitee)
+        }
       })).data.usersById
-    }
   },
 
   User: {

@@ -7,8 +7,9 @@ type User {
 
 type Workspace {
   name: String!
-  members: [User!]!
   created: String
+  members: [User!]!
+  invited: [User!]!
 }
 
 type Query {
