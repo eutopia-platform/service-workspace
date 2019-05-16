@@ -4,11 +4,11 @@ const ascii = {
   numbers: () => '0123456789'.split(''),
 }
 
-export default (length, select) => {
+export default (length, select = { lower: true, upper: true, number: true }) => {
   const pool = [
     ...(select.lower ? ascii.lowerCase() : []),
     ...(select.upper ? ascii.upperCase() : []),
-    ...(select.numbers ? ascii.numbers() : []),
+    ...(select.number ? ascii.numbers() : []),
   ]
   if (pool.length === 0) throw Error('[randomString] must select char type')
   return Array(length).fill().map(() => pool[Math.floor(Math.random() * pool.length) | 0]).join('')
