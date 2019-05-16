@@ -8,6 +8,7 @@ import {
 import crypto from 'crypto'
 import { user as userService } from './interService'
 import randomString from './randomString'
+import { isValidEmail, sendInvitation as sendInviteEmail } from './mail'
 
 const knex = require('knex')({
   client: 'pg',
@@ -86,6 +87,81 @@ export default {
       })
       await knex.into(`${uid}_member`).insert({ uid: context.userId })
       return space
+    },
+
+    invite: async (root, { workspace, email }, context) => {
+      if (!context.userId) throw new AuthenticationError('NOT_LOGGED_IN')
+      const space = (await knex('workspace').where({ name: workspace }))[0]
+      if (!space) throw new ForbiddenError()
+
+      const memberUids = await knex(space.uid + '_member').map(m => m.uid)
+      const isMember = memberUids.includes(context.userId)
+      if (!isMember) throw new ForbiddenError()
+
+      if (!isValidEmail(email)) throw new UserInputError('INVALID_EMAIL')
+
+      let invitee = (await userService.query({
+        query: gql`
+          query getAccount($email: String!) {
+            usersByEmail(emails: [$email]) {
+              id
+            }
+          }
+        `,
+        variables: {
+          email
+        }
+      })).data.usersByEmail[0]
+
+      console.log('invitee:', invitee)
+
+      if (!invitee) throw new UserInputError('NOT_USER')
+      invitee = invitee.id
+
+      if (memberUids.includes(invitee))
+        throw new UserInputError('ALREADY_MEMBER')
+
+      const alreadInvited =
+        (await knex('invitation')
+          .select()
+          .where({ workspace, invitee })).length > 0
+
+      if (alreadInvited) throw new UserInputError('ALREADY_INVITED')
+
+      let link
+      do {
+        link = randomString(6, { lower: true, number: true })
+      } while ((await knex('invitation').where({ link })).length > 0)
+
+      await knex('invitation').insert({
+        link: link,
+        workspace: space.uid,
+        invitee: invitee,
+        issuer: context.userId,
+        created: new Date().toISOString()
+      })
+
+      const [inviteeName, userName] = (await userService.query({
+        query: gql`
+          query inviteeName($uidInvitee: ID!, $uidUser: ID!) {
+            usersById(ids: [$uidInvitee, $uidUser]) {
+              callname
+            }
+          }
+        `,
+        variables: {
+          uidInvitee: invitee,
+          uidUser: context.userId
+        }
+      })).data.usersById.map(user => user.callname)
+
+      await sendInviteEmail(
+        email,
+        space.name,
+        userName,
+        inviteeName,
+        `https://productcube.io/invite/${link}`
+      )
     }
   },
 
