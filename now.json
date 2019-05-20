@@ -10,6 +10,6 @@
     "MAIL_PASSWORD": "@mail_password",
     "DATABASE_URL": "@database_url",
     "DATABASE_NAME": "@database_name",
-    "WORKSPACE_DATABASE_PASSWORD": "@database_password"
+    "WORKSPACE_DATABASE_PASSWORD": "@workspace_database_password"
   }
 }
