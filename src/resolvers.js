@@ -85,7 +85,7 @@ export default {
         .insert({ uid, name, created: new Date().toISOString() })
         .returning('*'))[0]
       await knex.schema.createTable(`${uid}_member`, table => {
-        table.string('uid', 20)
+        table.string('uid', 20).primary()
       })
       await knex.into(`${uid}_member`).insert({ uid: context.userId })
       return space
