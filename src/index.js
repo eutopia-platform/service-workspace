@@ -43,11 +43,16 @@ export default async (request, response) => {
         })).data.user.id
   } catch (err) {}
 
+  const isService =
+    request.headers.auth &&
+    request.headers.auth === process.env.WORKSPACE_PASSWORD
+
   new ApolloServer({
     typeDefs: schema,
     resolvers,
     context: {
-      userId
+      userId,
+      isService
     }
   }).createHandler({
     path: '/'

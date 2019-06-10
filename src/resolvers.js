@@ -8,6 +8,7 @@ import crypto from 'crypto'
 import { user as userService, auth } from './interService'
 import { isValidEmail } from './mail'
 import uuid from 'uuid/v4'
+import { resultKeyNameFromField } from 'apollo-utilities'
 
 const knex = require('knex')({
   client: 'pg',
@@ -62,6 +63,14 @@ export default {
       return (await knex('workspace').select()).filter(space =>
         space.members.includes(userId)
       )
+    },
+
+    invitations: async (root, { id }, { isService }) => {
+      console.log('get invitations')
+      if (!isService) throw new ForbiddenError('UNAUTHORIZED')
+      return (await knex('workspace').select('name', 'invited'))
+        .filter(space => space.invited.includes(id))
+        .map(space => space.name)
     }
   },
 
@@ -106,6 +115,7 @@ export default {
             email
           }
         })
+        .then(res => res.data.usersByEmail[0].id)
         .catch(async err => {
           if (err.graphQLErrors[0].extensions.code === 'BAD_USER_INPUT') {
             return (await auth.mutate({
@@ -141,26 +151,6 @@ export default {
         .where({ name: workspace })
     },
 
-    // joinWorkspace: async (root, { inviteLink }, context) => {
-    //   return
-    //   if (!context.userId) throw new AuthenticationError('NOT_LOGGED_IN')
-    //   const invite = (await knex('invitation').where({ link: inviteLink }))[0]
-    //   if (!invite) throw new ForbiddenError()
-    //   if (invite.invitee !== context.userId) throw new ForbiddenError()
-
-    //   const space = (await knex('workspace').where({
-    //     uid: invite.workspace
-    //   }))[0]
-    //   if (!space) throw new ApolloError('WORKSPACE_GONE')
-
-    //   await knex(`${space.uid}_member`).insert({ uid: invite.invitee })
-    //   await knex('invitation')
-    //     .where({ invitee: invite.invitee })
-    //     .del()
-
-    //   return (await knex('workspace').where({ uid: space.uid }))[0]
-    // },
-
     deleteWorkspace: async (root, { name }, { userId }) => {
       if (!userId) throw new ForbiddenError()
       const space = (await knex('workspace').where({ name }))[0]
@@ -174,6 +164,32 @@ export default {
       await knex('workspace')
         .where({ id: space.id })
         .del()
+    },
+
+    acceptInvitation: async (root, { workspace }, { userId }) => {
+      const space = (await knex('workspace')
+        .select('invited', 'members')
+        .where({ name: workspace }))[0]
+      if (!space || !userId || !space.invited.includes(userId))
+        throw new UserInputError()
+      await knex('workspace')
+        .update({
+          invited: space.invited.filter(e => e !== userId),
+          members: [...space.members, ...[userId]]
+        })
+        .where({ name: workspace })
+    },
+
+    declineInvitation: async (root, { workspace }, { userId }) => {
+      const space = (await knex('workspace')
+        .select('invited')
+        .where({ name: workspace }))[0]
+      if (!space || !userId || !space.invited.includes(userId))
+        throw new UserInputError()
+      return (await knex('workspace')
+        .update({ invited: space.invited.filter(e => e !== userId) })
+        .where({ name: workspace })
+        .returning('*'))[0]
     }
   },
 
