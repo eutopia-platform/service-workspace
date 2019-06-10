@@ -12,12 +12,7 @@
   "author": "",
   "license": "ISC",
   "watch": {
-    "build": {
-      "patterns": [
-        "src"
-      ],
-      "extensions": "js,graphql"
-    }
+    "build": "src/*.{js,graphql}"
   },
   "repository": {
     "type": "git",

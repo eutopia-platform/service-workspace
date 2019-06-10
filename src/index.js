@@ -32,15 +32,15 @@ export default async (request, response) => {
       : (await authService.query({
           query: gql`
             query sessionUser($sessionToken: ID!) {
-              user(token: $sessionToken) {
-                uid
+              user(sessionToken: $sessionToken) {
+                id
               }
             }
           `,
           variables: {
             sessionToken
           }
-        })).data.user.uid
+        })).data.user.id
   } catch (err) {}
 
   new ApolloServer({
