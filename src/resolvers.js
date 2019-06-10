@@ -22,6 +22,12 @@ const knex = require('knex')({
   searchPath: 'sc_work'
 })
 
+let validWorkspaceName = name =>
+  name.length >= 3 &&
+  /^[a-z0-9_-]+$/i.test(name) &&
+  !/^[_-]|[_-]$/.test(name) &&
+  !/([_-])\1+/.test(name)
+
 export default {
   Query: {
     hello: () => 'workspace service says hello',
@@ -70,16 +76,14 @@ export default {
   Mutation: {
     createWorkspace: async (root, { name }, context) => {
       if (!context.userId) throw new AuthenticationError('NOT_LOGGED_IN')
-      if (/[^a-zA-Z0-9]/.test(name)) throw new UserInputError('INVALID_NAME')
+      if (!validWorkspaceName(name)) throw new UserInputError('INVALID_NAME')
       const exists = (await knex('workspace').select('name'))
         .map(s => s.name.toLowerCase())
         .includes(name.toLowerCase())
       if (exists) throw new UserInputError('ALREADY_EXISTS')
-
       let uid = randomString(8, { lower: true })
       while ((await knex('workspace').where({ uid }).length) > 0)
         uid = randomString(8, { lower: true })
-
       const space = (await knex
         .into('workspace')
         .insert({ uid, name, created: new Date().toISOString() })
