@@ -31,7 +31,8 @@
     "knex": "^0.16.5",
     "micro": "^9.3.3",
     "node-fetch": "^2.3.0",
-    "pg": "^7.10.0"
+    "pg": "^7.10.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.3",
