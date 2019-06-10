@@ -2,13 +2,11 @@ import {
   AuthenticationError,
   ForbiddenError,
   UserInputError,
-  ApolloError,
   gql
 } from 'apollo-server-micro'
 import crypto from 'crypto'
-import { user as userService } from './interService'
-import randomString from './randomString'
-import { isValidEmail, sendInvitation as sendInviteEmail } from './mail'
+import { user as userService, auth } from './interService'
+import { isValidEmail } from './mail'
 import uuid from 'uuid/v4'
 
 const knex = require('knex')({
@@ -89,80 +87,59 @@ export default {
         .returning('*'))[0]
     },
 
-    // invite: async (root, { workspace, email }, context) => {
-    //   if (!context.userId) throw new AuthenticationError('NOT_LOGGED_IN')
-    //   const space = (await knex('workspace').where({ name: workspace }))[0]
-    //   if (!space) throw new ForbiddenError()
+    invite: async (root, { workspace, email }, { userId }) => {
+      if (!userId) throw new AuthenticationError('NOT_LOGGED_IN')
+      const space = (await knex('workspace').where({ name: workspace }))[0]
+      if (!space || !space.members.includes(userId)) throw new ForbiddenError()
+      if (!isValidEmail(email)) throw new UserInputError('INVALID_EMAIL')
 
-    //   const memberUids = await knex(space.uid + '_member').map(m => m.uid)
-    //   const isMember = memberUids.includes(context.userId)
-    //   if (!isMember) throw new ForbiddenError()
+      let inviteeId = await userService
+        .query({
+          query: gql`
+            query getInviteeId($email: String!) {
+              usersByEmail(emails: [$email]) {
+                id
+              }
+            }
+          `,
+          variables: {
+            email
+          }
+        })
+        .catch(async err => {
+          if (err.graphQLErrors[0].extensions.code === 'BAD_USER_INPUT') {
+            return (await auth.mutate({
+              mutation: gql`
+                mutation inviteUser($email: String!) {
+                  invite(email: $email)
+                }
+              `,
+              variables: {
+                email
+              }
+            })).data.invite
+          }
+          throw err
+        })
 
-    //   if (!isValidEmail(email)) throw new UserInputError('INVALID_EMAIL')
+      if (
+        (await knex('workspace')
+          .select('invited')
+          .where({ name: workspace }))[0].invited.includes(inviteeId)
+      )
+        throw new UserInputError('ALREADY_INVITED')
 
-    //   let invitee = (await userService.query({
-    //     query: gql`
-    //       query getAccount($email: String!) {
-    //         usersByEmail(emails: [$email]) {
-    //           id
-    //         }
-    //       }
-    //     `,
-    //     variables: {
-    //       email
-    //     }
-    //   })).data.usersByEmail[0]
-
-    //   console.log('invitee:', invitee)
-
-    //   if (!invitee) throw new UserInputError('NOT_USER')
-    //   invitee = invitee.id
-
-    //   if (memberUids.includes(invitee))
-    //     throw new UserInputError('ALREADY_MEMBER')
-
-    //   const alreadInvited =
-    //     (await knex('invitation')
-    //       .select()
-    //       .where({ workspace, invitee })).length > 0
-
-    //   if (alreadInvited) throw new UserInputError('ALREADY_INVITED')
-
-    //   let link
-    //   do {
-    //     link = randomString(6, { lower: true, number: true })
-    //   } while ((await knex('invitation').where({ link })).length > 0)
-
-    //   await knex('invitation').insert({
-    //     link: link,
-    //     workspace: space.uid,
-    //     invitee: invitee,
-    //     issuer: context.userId,
-    //     created: new Date().toISOString()
-    //   })
-
-    //   const [inviteeName, userName] = (await userService.query({
-    //     query: gql`
-    //       query inviteeName($uidInvitee: ID!, $uidUser: ID!) {
-    //         usersById(ids: [$uidInvitee, $uidUser]) {
-    //           callname
-    //         }
-    //       }
-    //     `,
-    //     variables: {
-    //       uidInvitee: invitee,
-    //       uidUser: context.userId
-    //     }
-    //   })).data.usersById.map(user => user.callname)
-
-    //   await sendInviteEmail(
-    //     email,
-    //     space.name,
-    //     userName,
-    //     inviteeName,
-    //     `https://productcube.io/invite/${link}`
-    //   )
-    // },
+      await knex('workspace')
+        .update({
+          invited: [
+            ...(await knex('workspace')
+              .select('invited')
+              .where({ name: workspace }))[0].invited,
+            ...[inviteeId]
+          ]
+        })
+        .where({ name: workspace })
+    },
 
     // joinWorkspace: async (root, { inviteLink }, context) => {
     //   return
