@@ -8,6 +8,7 @@
     "AUTH_PASSWORD": "@auth_password",
     "USER_PASSWORD": "@user_password",
     "MAIL_PASSWORD": "@mail_password",
+    "WORKSPACE_PASSWORD": "@workspace_password",
     "DATABASE_URL": "@database_url",
     "DATABASE_NAME": "@database_name",
     "WORKSPACE_DATABASE_PASSWORD": "@workspace_database_password"

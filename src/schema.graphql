@@ -17,13 +17,15 @@ type Query {
   workspace(name: String!): Workspace!
   workspaces: [Workspace!]!
   inviteSpaceName(link: String!): String!
+  invitations(id: ID!): [String!]!
 }
 
 type Mutation {
   createWorkspace(name: String!): Workspace!
-  joinWorkspace(inviteLink: String!): Workspace!
   invite(workspace: String!, email: String!): Boolean
   deleteWorkspace(name: String!): Boolean
+  declineInvitation(workspace: String!): Boolean
+  acceptInvitation(workspace: String!): Workspace
 }
 
 schema {

@@ -32,22 +32,27 @@ export default async (request, response) => {
       : (await authService.query({
           query: gql`
             query sessionUser($sessionToken: ID!) {
-              user(token: $sessionToken) {
-                uid
+              user(sessionToken: $sessionToken) {
+                id
               }
             }
           `,
           variables: {
             sessionToken
           }
-        })).data.user.uid
+        })).data.user.id
   } catch (err) {}
+
+  const isService =
+    request.headers.auth &&
+    request.headers.auth === process.env.WORKSPACE_PASSWORD
 
   new ApolloServer({
     typeDefs: schema,
     resolvers,
     context: {
-      userId
+      userId,
+      isService
     }
   }).createHandler({
     path: '/'
