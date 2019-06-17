@@ -188,10 +188,9 @@ export default {
         .where({ name: workspace }))[0]
       if (!space || !userId || !space.invited.includes(userId))
         throw new UserInputError()
-      return (await knex('workspace')
+      await knex('workspace')
         .update({ invited: space.invited.filter(e => e !== userId) })
         .where({ name: workspace })
-        .returning('*'))[0]
     }
   },
 
