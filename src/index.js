@@ -13,7 +13,18 @@ const headers = {
   'Access-Control-Allow-Headers': 'content-type, session-token'
 }
 
+const printTitle = title =>
+  void console.info(
+    `\n${'—'.repeat(process.stdout.columns)}\n${' '.repeat(
+      Math.floor((process.stdout.columns - title.length) / 2)
+    )}${title}${' '.repeat(
+      Math.ceil((process.stdout.columns - title.length) / 2)
+    )}\n${'—'.repeat(process.stdout.columns)}\n`
+  )
+
 export default async (request, response) => {
+  if (process.env.NODE_ENV === 'development') printTitle('WORKSPACE')
+
   if (request.method === 'OPTIONS') {
     response.writeHead(204, headers)
     response.end()
@@ -25,23 +36,19 @@ export default async (request, response) => {
   )
 
   const sessionToken = request.headers['session-token'] || null
-  let userId = null
-  try {
-    userId = !sessionToken
-      ? null
-      : (await authService.query({
-          query: gql`
-            query sessionUser($sessionToken: ID!) {
-              user(sessionToken: $sessionToken) {
-                id
-              }
+
+  const userId = !sessionToken
+    ? null
+    : (await authService.query({
+        query: gql`
+          query serviceWorkspaceUser($sessionToken: ID!) {
+            user(sessionToken: $sessionToken) {
+              id
             }
-          `,
-          variables: {
-            sessionToken
           }
-        })).data.user.id
-  } catch (err) {}
+        `,
+        variables: { sessionToken }
+      })).data.user.id
 
   const isService =
     request.headers.auth &&

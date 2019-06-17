@@ -95,14 +95,11 @@ export default {
         .returning('*'))[0]
     },
 
-    invite: async (root, { workspace, email }, { userId }) => {
+    invite: async (root, { workspace, email }, { userId, userEmail }) => {
       if (!userId) throw new AuthenticationError('NOT_LOGGED_IN')
       const space = (await knex('workspace').where({ name: workspace }))[0]
       if (!space || !space.members.includes(userId)) throw new ForbiddenError()
       if (!isValidEmail(email)) throw new UserInputError('INVALID_EMAIL')
-
-      if (space.members.includes(userId))
-        throw new UserInputError('ALREADY_MEMBER')
 
       let inviteeId = await userService
         .query({
@@ -133,6 +130,9 @@ export default {
           }
           throw err
         })
+
+      if (space.members.includes(inviteeId))
+        throw new UserInputError('ALREADY_MEMBER')
 
       if (
         (await knex('workspace')
