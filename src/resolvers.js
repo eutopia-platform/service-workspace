@@ -8,7 +8,6 @@ import crypto from 'crypto'
 import { user as userService, auth } from './interService'
 import { isValidEmail } from './mail'
 import uuid from 'uuid/v4'
-import { resultKeyNameFromField } from 'apollo-utilities'
 
 const knex = require('knex')({
   client: 'pg',
@@ -101,6 +100,9 @@ export default {
       const space = (await knex('workspace').where({ name: workspace }))[0]
       if (!space || !space.members.includes(userId)) throw new ForbiddenError()
       if (!isValidEmail(email)) throw new UserInputError('INVALID_EMAIL')
+
+      if (space.members.includes(userId))
+        throw new UserInputError('ALREADY_MEMBER')
 
       let inviteeId = await userService
         .query({
