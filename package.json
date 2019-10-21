@@ -28,7 +28,7 @@
     "apollo-server-micro": "^2.5.0",
     "graphql": "^14.2.0",
     "graphql-tag": "^2.10.1",
-    "knex": "^0.16.5",
+    "knex": "^0.19.5",
     "micro": "^9.3.3",
     "node-fetch": "^2.3.0",
     "pg": "^7.10.0",
